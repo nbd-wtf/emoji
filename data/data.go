@@ -1,48 +1,54 @@
-//go:generate go get -u -v github.com/go-bindata/go-bindata/...
-//go:generate go-bindata -prefix unicode.org/Public/emoji/ -ignore \.*html -ignore ReadMe\.txt -pkg data -o bindata.go unicode.org/Public/emoji/...
-// NOTE: installing go-bindata currently requires using `GO111MODULE=off go generate`
-
 package data
 
-var getBytesByVersionAndType = map[int]map[FileType]func() ([]byte, error){
-	1: {
-		Data: _10EmojiDataTxtBytes,
-	},
-	2: {
-		Data:         _20EmojiDataTxtBytes,
-		Sequences:    _20EmojiSequencesTxtBytes,
-		ZWJSequences: _20EmojiZwjSequencesTxtBytes,
-	},
-	3: {
-		Data:         _30EmojiDataTxtBytes,
-		Sequences:    _30EmojiSequencesTxtBytes,
-		ZWJSequences: _30EmojiZwjSequencesTxtBytes,
-	},
-	4: {
-		Data:         _40EmojiDataTxtBytes,
-		Sequences:    _40EmojiSequencesTxtBytes,
-		Test_:        _40EmojiTestTxtBytes,
-		ZWJSequences: _40EmojiZwjSequencesTxtBytes,
-	},
-	5: {
-		Data:               _50EmojiDataTxtBytes,
-		Sequences:          _50EmojiSequencesTxtBytes,
-		Test_:              _50EmojiTestTxtBytes,
-		VariationSequences: _50EmojiVariationSequencesTxtBytes,
-		ZWJSequences:       _50EmojiZwjSequencesTxtBytes,
-	},
-	11: {
-		Data:               _110EmojiDataTxtBytes,
-		Sequences:          _110EmojiSequencesTxtBytes,
-		Test_:              _110EmojiTestTxtBytes,
-		VariationSequences: _110EmojiVariationSequencesTxtBytes,
-		ZWJSequences:       _110EmojiZwjSequencesTxtBytes,
-	},
-	12: {
-		Data:               _120EmojiDataTxtBytes,
-		Sequences:          _120EmojiSequencesTxtBytes,
-		Test_:              _120EmojiTestTxtBytes,
-		VariationSequences: _120EmojiVariationSequencesTxtBytes,
-		ZWJSequences:       _120EmojiZwjSequencesTxtBytes,
-	},
-}
+import (
+	_ "embed"
+	"fmt"
+	"regexp"
+)
+
+//go:embed emoji-sequences.txt
+var EmojiSequences string
+
+//go:embed emoji-zwj-sequences.txt
+var EmojiZwjSequences string
+
+var Data = EmojiSequences + "\n" + EmojiZwjSequences
+
+const (
+	cp = "[A-F0-9]{4,5}"
+)
+
+var (
+	rangeRegexp  = regexp.MustCompile("^(" + cp + ")[.]{2}(" + cp + ")")
+	singleRegexp = regexp.MustCompile("^(" + cp + ")")
+	seqRegexp    = regexp.MustCompile("^" + cp + "(?: " + cp + ")+")
+)
+
+type EmojiGroup string
+
+const (
+	BasicEmoji            EmojiGroup = "Basic_Emoji"
+	EmojiKeyCapSequence   EmojiGroup = "Emoji_Keycap_Sequence"
+	EmojiFlagSequence     EmojiGroup = "RGI_Emoji_Flag_Sequence"
+	EmojiTagSequence      EmojiGroup = "RGI_Emoji_Tag_Sequence;"
+	EmojiModifierSequence EmojiGroup = "RGI_Emoji_Modifier_Sequence"
+	EmojiZWJSequence      EmojiGroup = "RGI_Emoji_ZWJ_Sequence"
+)
+
+var (
+	BasicEmojiGroupRegex            = regexp.MustCompile(fmt.Sprintf(";\\s+%v\\s*[;#]", BasicEmoji))
+	EmojiKeyCapSequenceGroupRegex   = regexp.MustCompile(fmt.Sprintf(";\\s+%v\\s*[;#]", EmojiKeyCapSequence))
+	EmojiFlagSequenceGroupRegex     = regexp.MustCompile(fmt.Sprintf(";\\s+%v\\s*[;#]", EmojiFlagSequence))
+	EmojiTagSequenceGroupRegex      = regexp.MustCompile(fmt.Sprintf(";\\s+%v\\s*[;#]", EmojiTagSequence))
+	EmojiModifierSequenceGroupRegex = regexp.MustCompile(fmt.Sprintf(";\\s+%v\\s*[;#]", EmojiModifierSequence))
+	EmojiZWJSequenceGroupRegex      = regexp.MustCompile(fmt.Sprintf(";\\s+%v\\s*[;#]", EmojiZWJSequence))
+)
+
+var (
+	BasicEmojiGroup            = parseSequencesMatching(BasicEmojiGroupRegex)
+	EmojiKeyCapSequenceGroup   = parseSequencesMatching(EmojiKeyCapSequenceGroupRegex)
+	EmojiFlagSequenceGroup     = parseSequencesMatching(EmojiFlagSequenceGroupRegex)
+	EmojiTagSequenceGroup      = parseSequencesMatching(EmojiTagSequenceGroupRegex)
+	EmojiModifierSequenceGroup = parseSequencesMatching(EmojiModifierSequenceGroupRegex)
+	EmojiZWJSequenceGroup      = parseSequencesMatching(EmojiZWJSequenceGroupRegex)
+)

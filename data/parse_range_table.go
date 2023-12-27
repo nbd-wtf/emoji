@@ -1,34 +1,49 @@
 package data
 
 import (
-	"bufio"
-	"bytes"
 	"fmt"
 	"math"
+	"regexp"
 	"strconv"
 	"strings"
 	"unicode"
+
+	"golang.org/x/exp/slices"
 )
 
-// ParseRangeTable parses the specified Unicode.org data file for characters with the
-// specified property, and returns a range table of those characters.
+// ParseRangeTable parses the specified Unicode.org data file for characters in the
+// specified group, and returns a range table of those characters.
 //
 // Note that the range table reflects the ranges as defined in the source files; ranges
 // are guaranteed not to overlap, as per the RangeTable docs, but adjacent ranges are not
 // coalesced.
-func ParseRangeTable(property Property, data []byte) *unicode.RangeTable {
-	propRegexp := hasPropertyRegexp(property)
+func ParseRangeTable(group EmojiGroup) *unicode.RangeTable {
+	var re *regexp.Regexp
+	switch group {
+	case BasicEmoji:
+		re = BasicEmojiGroupRegex
+	case EmojiKeyCapSequence:
+		re = EmojiKeyCapSequenceGroupRegex
+	case EmojiFlagSequence:
+		re = EmojiFlagSequenceGroupRegex
+	case EmojiTagSequence:
+		re = EmojiTagSequenceGroupRegex
+	case EmojiModifierSequence:
+		re = EmojiModifierSequenceGroupRegex
+	case EmojiZWJSequence:
+		re = EmojiZWJSequenceGroupRegex
+	default:
+		panic("exhaustive switch")
+	}
 
 	var r16s []unicode.Range16
 	var r32s []unicode.Range32
 
-	scanner := bufio.NewScanner(bytes.NewReader(data))
-	for scanner.Scan() {
-		line := scanner.Text()
+	for _, line := range strings.Split(Data, "\n") {
 		if strings.HasPrefix(line, "#") || strings.TrimSpace(line) == "" {
 			continue
 		}
-		if !propRegexp.MatchString(line) {
+		if !re.MatchString(line) {
 			continue
 		}
 		start, end, ok := toRange(line)
@@ -46,6 +61,9 @@ func ParseRangeTable(property Property, data []byte) *unicode.RangeTable {
 		}
 	}
 
+	slices.SortFunc(r16s, func(a, b unicode.Range16) int { return int(a.Lo) - int(b.Lo) })
+	slices.SortFunc(r32s, func(a, b unicode.Range32) int { return int(a.Lo) - int(b.Lo) })
+
 	latinOffset := 0
 	for _, r16 := range r16s {
 		if r16.Hi <= unicode.MaxLatin1 {
@@ -53,16 +71,12 @@ func ParseRangeTable(property Property, data []byte) *unicode.RangeTable {
 		}
 	}
 
-	rt := unicode.RangeTable{
+	return &unicode.RangeTable{
 		R16:         r16s,
 		R32:         r32s,
 		LatinOffset: latinOffset,
 	}
-	return &rt
 }
-
-// ------------------------------------------------------------
-// Unexported symbols
 
 func toRange(line string) (start, end string, ok bool) {
 	rangeMatch := rangeRegexp.FindStringSubmatch(line)
