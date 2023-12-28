@@ -3,7 +3,7 @@ package emoji
 import (
 	"unicode"
 
-	"github.com/fiatjaf/emoji/data"
+	"github.com/nbd-wtf/emoji/data"
 )
 
 var emoji = data.ParseRangeTable(data.BasicEmoji)

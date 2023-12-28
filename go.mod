@@ -1,4 +1,4 @@
-module github.com/fiatjaf/emoji
+module github.com/nbd-wtf/emoji
 
 go 1.21.4
 
