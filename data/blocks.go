@@ -6,10 +6,10 @@ import (
 
 // These variables have type *unicode.RangeTable.
 var (
-	CombiningDiacritical  = _CombiningDiacritical	// Unicode block "Combining Diacritical Marks for Symbols"
-	RegionalIndicator     = _RegionalIndicator		// Subset of "Enclosed Alphanumeric Supplement" used for flag regional indicators
-	EmojiSkinToneModifier = _EmojiSkinToneModifier	// A.k.a. "EMOJI MODIFIER FITZPATRICK TYPE-(1-2|3|4|5|6)"
-	Tag                   = _Tag					// Unicode block "Tags" used for subnational flag sequences
+	CombiningDiacritical  = _CombiningDiacritical  // Unicode block "Combining Diacritical Marks for Symbols"
+	RegionalIndicator     = _RegionalIndicator     // Subset of "Enclosed Alphanumeric Supplement" used for flag regional indicators
+	EmojiSkinToneModifier = _EmojiSkinToneModifier // A.k.a. "EMOJI MODIFIER FITZPATRICK TYPE-(1-2|3|4|5|6)"
+	Tag                   = _Tag                   // Unicode block "Tags" used for subnational flag sequences
 )
 
 var _CombiningDiacritical = &unicode.RangeTable{
